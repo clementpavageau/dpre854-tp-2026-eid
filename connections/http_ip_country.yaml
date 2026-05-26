@@ -1,0 +1,4 @@
+connections:
+  - conn_id: http_ip_country
+    conn_type: http
+    host: http://ip-api.com

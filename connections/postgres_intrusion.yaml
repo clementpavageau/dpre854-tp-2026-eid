@@ -1,0 +1,8 @@
+connections:
+  - conn_id: postgres_intrusion
+    conn_type: postgres
+    host: postgres
+    schema: intrusion
+    login: airflow
+    password: airflow
+    port: 5432

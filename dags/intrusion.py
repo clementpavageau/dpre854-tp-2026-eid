@@ -1,38 +1,45 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 from datetime import datetime
 import pandas as pd
 import requests
-import json
 
-LOG_FILE = "/opt/airflow/data/intrusion.log"
+LOG_FILE = "/opt/airflow/dags/intrusion.log"
 
 default_args = {
     "owner": "airflow",
     "start_date": datetime(2026, 1, 1),
 }
 
-# -----------------------------
+# -----------------------------------
 # Extraction des IPs
-# -----------------------------
+# -----------------------------------
+
 def extract_ips(**context):
 
     ips = []
 
     with open(LOG_FILE, "r") as f:
+
         for line in f:
+
             if "SRC=" in line:
+
                 ip = line.split("SRC=")[1].split(" ")[0]
+
                 ips.append(ip)
 
-    context["ti"].xcom_push(key="ips", value=ips)
+    context["ti"].xcom_push(
+        key="ips",
+        value=ips
+    )
 
-# -----------------------------
-# Correspondance IP -> Pays
-# -----------------------------
+# -----------------------------------
+# Correspondance IP / Pays
+# -----------------------------------
+
 def ip_to_country(**context):
 
     ips = context["ti"].xcom_pull(
@@ -60,9 +67,10 @@ def ip_to_country(**context):
         value=results
     )
 
-# -----------------------------
+# -----------------------------------
 # Sauvegarde CSV
-# -----------------------------
+# -----------------------------------
+
 def save_csv(**context):
 
     results = context["ti"].xcom_pull(
@@ -73,13 +81,14 @@ def save_csv(**context):
     df = pd.DataFrame(results)
 
     df.to_csv(
-        "/opt/airflow/data/result_intrusion.csv",
+        "/opt/airflow/dags/result_intrusion.csv",
         index=False
     )
 
-# -----------------------------
+# -----------------------------------
 # DAG
-# -----------------------------
+# -----------------------------------
+
 with DAG(
     dag_id="dag_intrusion",
     default_args=default_args,
